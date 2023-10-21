@@ -76,10 +76,13 @@ class Mitre:
         return techniques
     
     def get_sub_infos(self, sub):
-        url = sub.split(' ')[0].replace('.', '/')
+        sub_url = sub.split(' ')[0].replace('.', '/')
         print(sub)
-        print(f'{self.url_base}/techniques/{url}')
+        url  = f'{self.url_base}/techniques/{sub_url}'
+        print(url)
+        getMitreInfos().start(url)
         pass
+    
     def start(self):
         tactics = self.get_tactics()
         tactics_choice = self.questioner('TACTICS', tactics)
@@ -92,8 +95,46 @@ class Mitre:
         sub_tec_choice = self.questioner('SUB-TECHNIQUES', sub_techniques)
         
         infos = self.get_sub_infos(sub_techniques[sub_tec_choice])
-
+        
+class getMitreInfos:
+    def get_url_content(self, url):
+        res = requests.get(url).content
+        soup = BeautifulSoup(res, 'html.parser')
+        
+        return soup
     
+    def get_tables_infos(self):
+        tables = self.soup.find_all('table', class_='table table-bordered table-alternate mt-2')
+        return tables
+    
+    def get_mitigations(self):
+        tables = self.tables_infos[1].find('tbody').find_all('tr')
+        result = []
+        
+        for table in tables:
+            dict_infos = {}
+            table = table.find_all('td')
+                
+            dict_infos['id'] = table[0].text.strip()
+            dict_infos['name'] = table[1].text.strip()
+            dict_infos['infos'] = table[2].text.strip()
+            
+            result.append(dict_infos)
+                
+        return result
+    
+    def start(self, url):
+        self.soup = self.get_url_content(url)
+        self.tables_infos = self.get_tables_infos()
+        infos = {}
+        
+        infos['name'] = self.soup.find('title').text.split(',')[0]
+        infos['content'] = self.soup.find('div', class_='description-body').text
+        infos['mitigations'] = self.get_mitigations()
+        
+        print(infos)
+        
 
 if __name__ == '__main__':
-    Mitre().start()
+    # Mitre().start()
+    getMitreInfos().start('https://attack.mitre.org/techniques/T1098/001/')

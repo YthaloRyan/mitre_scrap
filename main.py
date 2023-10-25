@@ -1,5 +1,8 @@
 import requests
 from bs4 import BeautifulSoup
+from pprint import pprint
+import json
+import yaml
 
 class Mitre:
     def __init__(self):
@@ -75,13 +78,11 @@ class Mitre:
         
         return techniques
     
-    def get_sub_infos(self, sub):
+    def get_sub_infos_url(self, sub):
         sub_url = sub.split(' ')[0].replace('.', '/')
-        print(sub)
         url  = f'{self.url_base}/techniques/{sub_url}'
-        print(url)
-        getMitreInfos().start(url)
-        pass
+        
+        return url
     
     def start(self):
         tactics = self.get_tactics()
@@ -94,7 +95,11 @@ class Mitre:
         sub_techniques = self.sub_tech_organizer(techniques_choice)
         sub_tec_choice = self.questioner('SUB-TECHNIQUES', sub_techniques)
         
-        infos = self.get_sub_infos(sub_techniques[sub_tec_choice])
+        infos_url = self.get_sub_infos_url(sub_techniques[sub_tec_choice])
+        
+        sub_technique_content = getMitreInfos().start(infos_url)
+        
+        return sub_technique_content
         
 class getMitreInfos:
     def get_url_content(self, url):
@@ -105,10 +110,15 @@ class getMitreInfos:
     
     def get_tables_infos(self):
         tables = self.soup.find_all('table', class_='table table-bordered table-alternate mt-2')
-        return tables
+        
+        for table in tables:
+            if 'Mitigation' in table.text:
+                return table
+
+        return None
     
     def get_mitigations(self):
-        tables = self.tables_infos[1].find('tbody').find_all('tr')
+        tables = self.get_tables_infos().find('tbody').find_all('tr')
         result = []
         
         for table in tables:
@@ -123,18 +133,35 @@ class getMitreInfos:
                 
         return result
     
+    def get_infos(self):
+        soup = self.soup.find('div', class_='col-md-4').find('div', class_='card-body').find_all('div', class_='col-md-11 pl-0')
+        result = {}
+        infos_list = []
+        for t in soup:
+            infos = t.get_text(strip=True).split(':')
+            infos_list.append(infos)  
+        
+        for name in infos_list:
+            result[name[0]] = name[1]
+            
+        return result
+    
     def start(self, url):
         self.soup = self.get_url_content(url)
-        self.tables_infos = self.get_tables_infos()
         infos = {}
         
         infos['name'] = self.soup.find('title').text.split(',')[0]
-        infos['content'] = self.soup.find('div', class_='description-body').text
+        infos['content'] = self.soup.find('div', class_='description-body').get_text(strip=True)
         infos['mitigations'] = self.get_mitigations()
+        infos['infos'] = self.get_infos()
         
-        print(infos)
+        return infos
         
 
-if __name__ == '__main__':
-    # Mitre().start()
-    getMitreInfos().start('https://attack.mitre.org/techniques/T1098/001/')
+namesa = Mitre().start()
+
+with open('teste.yaml', 'w') as f:
+    yaml.dump(namesa, f , default_flow_style=False)
+# if __name__ == '__main__':
+#     Mitre().start()
+    

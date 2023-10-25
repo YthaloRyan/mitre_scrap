@@ -1,0 +1,31 @@
+content: Adversaries may modify systems in order to manipulate the data as it is accessed
+  and displayed to an end user, thus threatening the integrity of the data.[1][2]By
+  manipulating runtime data, adversaries may attempt to affect a business process,
+  organizational understanding, and decision making.Adversaries may alter application
+  binaries used to display data in order to cause runtime manipulations. Adversaries
+  may also conductChange Default File AssociationandMasqueradingto cause a similar
+  effect. The type of modification and the impact it will have depends on the target
+  application and process as well as the goals and objectives of the adversary. For
+  complex systems, an adversary would likely need special expertise and possibly access
+  to specialized software related to the system that would typically be gained through
+  a prolonged information gathering campaign in order to have the desired impact.
+infos:
+  Created: 02 March 2020
+  ID: T1565.003
+  Impact Type: Integrity
+  Last Modified: 25 March 2022
+  Permissions Required: Administrator, SYSTEM, User, root
+  Platforms: Linux, Windows, macOS
+  Sub-technique of: T1565
+  Tactic: Impact
+  Version: '1.1'
+mitigations:
+- id: M1030
+  infos: Identify critical business and system processes that may be targeted by adversaries
+    and work to isolate and secure those systems against unauthorized access and tampering.
+  name: Network Segmentation
+- id: M1022
+  infos: Prevent critical business and system processes from being replaced, overwritten,
+    or reconfigured to load potentially malicious code.
+  name: Restrict File and Directory Permissions
+name: 'Data Manipulation: Runtime Data Manipulation'
